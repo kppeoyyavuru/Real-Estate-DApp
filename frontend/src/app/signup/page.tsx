@@ -1,9 +1,28 @@
 'use client';
 import { SignUp } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { storeUserDetails } from "../../../server/index";
 
 export default function SignUpPage() {
+  const router = useRouter();
+
+  const handleSignUpComplete = async (signUpData: any) => {
+    console.log("SignUp Data:", signUpData); // Debug log
+    
+    try {
+      const result = await storeUserDetails(
+        signUpData.createdUserId,
+        signUpData.emailAddress
+      );
+      console.log("Database Result:", result); // Debug log
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error saving user:', error);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#0A0F1C] relative overflow-hidden px-4">
       {/* Background Effects */}
@@ -69,7 +88,7 @@ export default function SignUpPage() {
         {/* Right Side - Sign Up Form */}
         <div className="w-full max-w-md mx-auto">
           <div className="p-8 rounded-2xl bg-gray-800/50 border border-gray-700/50 backdrop-blur-sm hover:shadow-[0_0_50px_rgba(99,102,241,0.1)] transition-shadow duration-300">
-            <SignUp 
+            <SignUp
               appearance={{
                 baseTheme: dark,
                 elements: {
@@ -109,6 +128,7 @@ export default function SignUpPage() {
                   colorTextSecondary: "#ffffff",
                 }
               }}
+              afterSignUp={(signUpData: { createdUserId: string; emailAddress: string }) => handleSignUpComplete(signUpData)}
             />
           </div>
         </div>

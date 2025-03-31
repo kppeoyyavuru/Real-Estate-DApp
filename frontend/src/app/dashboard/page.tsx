@@ -1,9 +1,32 @@
 'use client';
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getUserDetails } from "../../../server/index";
 
 export default function Dashboard() {
+  const { user } = useUser();
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.emailAddresses[0]) {
+        try {
+          const userProfile = await getUserDetails(user.emailAddresses[0].emailAddress);
+          setProfile(userProfile[0]);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-[#0A0F1C]">
       {/* Background Gradients */}
@@ -19,10 +42,58 @@ export default function Dashboard() {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-white">Welcome to PropChain</h1>
-              <p className="text-gray-400">Explore investment and rental opportunities</p>
+              <p className="text-gray-400">Manage your real estate investments</p>
             </div>
-            <UserButton afterSignOutUrl="/" />
           </div>
+        </div>
+
+        {/* Profile Section */}
+        <div className="mb-8 bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+          <div className="flex justify-between items-start mb-4">
+            <h2 className="text-xl font-bold text-white">Profile Details</h2>
+            <Link 
+              href="/profile/complete" 
+              className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity"
+            >
+              Edit Profile
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="text-gray-400">Loading profile...</div>
+          ) : profile ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-gray-400 mb-1">Username</p>
+                <p className="text-white">{profile.username || 'Not set'}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 mb-1">Email</p>
+                <p className="text-white">{profile.email}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 mb-1">Phone</p>
+                <p className="text-white">{profile.phone || 'Not set'}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 mb-1">Wallet Address</p>
+                <p className="text-white font-mono text-sm">
+                  {profile.wallet_address ? (
+                    <>
+                      {profile.wallet_address.slice(0, 6)}...
+                      {profile.wallet_address.slice(-4)}
+                    </>
+                  ) : (
+                    'Not connected'
+                  )}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-gray-400">
+              No profile found. Please complete your profile.
+            </div>
+          )}
         </div>
 
         {/* Main Options */}

@@ -1,7 +1,31 @@
+'use client';
 import { SignIn } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { useRouter } from "next/navigation";
 
 export default function Page() {
+  const router = useRouter();
+
+  const handleSignInComplete = async (signInData: any) => {
+    try {
+      // Save user to database
+      await fetch('http://localhost:3001/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clerkId: signInData.createdUserId || signInData.userId,
+          email: signInData.emailAddress
+        }),
+      });
+      
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Error saving user:', error);
+    }
+  };
+
   return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#0A0F1C] relative overflow-hidden px-4">
       {/* Background Effects */}
@@ -50,6 +74,10 @@ export default function Page() {
                 colorTextSecondary: "#ffffff",
               }
             }}
+            afterSignInUrl="/dashboard"
+            signUpUrl="/signup"
+            redirectUrl="/dashboard"
+            afterSignIn={handleSignInComplete}
           />
         </div>
       </div>
