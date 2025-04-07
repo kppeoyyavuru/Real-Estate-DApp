@@ -2,11 +2,20 @@
 import { SignUp } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
-import { storeUserDetails } from "../../../server/index";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect } from "react";
+import { storeUserDetails } from "../../../../server/index";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  useEffect(() => {
+    // Redirect to dashboard if user is already signed in
+    if (isLoaded && isSignedIn) {
+      router.push('/dashboard');
+    }
+  }, [isLoaded, isSignedIn, router]);
 
   const handleSignUpComplete = async (signUpData: any) => {
     console.log("SignUp Data:", signUpData); // Debug log
@@ -22,6 +31,15 @@ export default function SignUpPage() {
       console.error('Error saving user:', error);
     }
   };
+
+  // If loading auth state or already signed in (before redirect happens), show nothing
+  if (!isLoaded || isSignedIn) {
+    return (
+      <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#0A0F1C]">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center bg-[#0A0F1C] relative overflow-hidden px-4">
@@ -128,6 +146,8 @@ export default function SignUpPage() {
                   colorTextSecondary: "#ffffff",
                 }
               }}
+              redirectUrl="/dashboard"
+              afterSignUpUrl="/dashboard"
               afterSignUp={(signUpData: { createdUserId: string; emailAddress: string }) => handleSignUpComplete(signUpData)}
             />
           </div>

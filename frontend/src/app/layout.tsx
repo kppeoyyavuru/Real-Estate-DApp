@@ -11,6 +11,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import Image from "next/image"
 import Link from "next/link"
 import './globals.css'
+import Script from 'next/script'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -35,7 +36,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0F1C]`}>
+        <body suppressHydrationWarning={true} className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0F1C]`}>
           <nav className="flex justify-between items-center px-6 py-4 bg-[#0A0F1C]/80 backdrop-blur-md border-b border-gray-800/50 sticky top-0 z-50">
             <div className="flex items-center gap-3">
               <Link href="/" className="flex items-center gap-3">
@@ -76,6 +77,32 @@ export default function RootLayout({
           <main>
             {children}
           </main>
+          
+          {/* Prevent Grammarly extension from adding attributes that cause hydration warnings */}
+          <Script id="disable-grammarly" strategy="beforeInteractive">
+            {`
+              if (typeof window !== 'undefined') {
+                const observer = new MutationObserver((mutations) => {
+                  mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && 
+                        (mutation.attributeName === 'data-gr-ext-installed' || 
+                         mutation.attributeName === 'data-new-gr-c-s-check-loaded')) {
+                      const element = mutation.target;
+                      element.removeAttribute(mutation.attributeName);
+                    }
+                  });
+                });
+                
+                // Start observing once the DOM is ready
+                document.addEventListener('DOMContentLoaded', () => {
+                  observer.observe(document.body, { 
+                    attributes: true,
+                    attributeFilter: ['data-gr-ext-installed', 'data-new-gr-c-s-check-loaded']
+                  });
+                });
+              }
+            `}
+          </Script>
         </body>
       </html>
     </ClerkProvider>

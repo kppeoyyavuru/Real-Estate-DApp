@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 // Store user details after Clerk signup
 export async function storeUserDetails(clerkId: string, email: string) {
-  const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL!);
   try {
     const response = await sql`
       INSERT INTO users (clerk_id, email) 
@@ -20,7 +20,7 @@ export async function storeUserDetails(clerkId: string, email: string) {
 
 // Get user details by email
 export async function getUserDetails(email: string) {
-  const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL!);
   const response = await sql`
     SELECT * FROM users 
     WHERE email = ${email}`;
@@ -30,7 +30,7 @@ export async function getUserDetails(email: string) {
 
 // Get all users
 export async function getAllUsers() {
-  const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL!);
   const response = await sql`
     SELECT * FROM users`;
   return response;
@@ -46,7 +46,7 @@ export async function updateUserProfile(
     walletAddress: string;
   }
 ) {
-  const sql = neon(process.env.NEXT_PUBLIC_DATABASE_URL!);
+  const sql = neon(process.env.DATABASE_URL!);
   
   try {
     // First check if user exists

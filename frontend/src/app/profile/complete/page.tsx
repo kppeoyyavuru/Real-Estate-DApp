@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { ethers } from 'ethers';
-import { updateUserProfile } from '../../../../server/index';
+
+// Remove duplicate window.ethereum type definition as it's now in global.d.ts
 
 export default function CompleteProfile() {
   const { user } = useUser();
@@ -11,7 +12,8 @@ export default function CompleteProfile() {
   const [formData, setFormData] = useState({
     username: '',
     phone: '',
-    walletAddress: ''
+    walletAddress: '',
+    email: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -51,12 +53,26 @@ export default function CompleteProfile() {
     setLoading(true);
 
     try {
-      await updateUserProfile(user?.id!, {
-        username: formData.username,
-        email: formData.email,
-        phone: formData.phone,
-        walletAddress: formData.walletAddress
+      // Call the server action directly
+      const response = await fetch('/api/update-profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          clerkId: user?.id,
+          data: {
+            username: formData.username,
+            email: formData.email,
+            phone: formData.phone,
+            walletAddress: formData.walletAddress
+          }
+        }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
       
       router.push('/dashboard');
     } catch (err: any) {

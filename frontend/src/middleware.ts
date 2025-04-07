@@ -1,12 +1,30 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+// Define public routes that should not be protected
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/login(.*)',
+  '/signup(.*)',
+  '/api/(.*)' 
+]);
+
+export default clerkMiddleware({
+  // Skip protection for public routes
+  publicRoutes: (req) => isPublicRoute(req.url),
+  afterAuth: (auth, req, evt) => {
+    // Redirect to dashboard if trying to access login/signup while signed in
+    if (auth.isSignedIn && (req.url.includes('/login') || req.url.includes('/signup'))) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: '/dashboard' },
+      });
+    }
+  }
+});
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
-    '/(api|trpc)(.*)',
+    // Match all paths except specified static assets and API routes
+    '/((?!_next/static|_next/image|favicon.ico).*)'
   ],
 };
